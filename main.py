@@ -10,6 +10,11 @@ from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
 from flask import session
 import sqlite3
+from werkzeug.utils import secure_filename
+from flask_wtf import FlaskForm
+from wtforms import PasswordField, StringField, TextAreaField, SubmitField, EmailField
+from wtforms.validators import DataRequired
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zyxw4342vut123srqpo89nmlkjihgf78213123edc1233ba'
@@ -22,6 +27,7 @@ user_name = 'root'
 cnt_enters = '???'
 cnt_marshs = '???'
 age_acc = '???'
+
 conn = sqlite3.connect('server1.db', check_same_thread=False)
 sql = conn.cursor()
 conn.commit()
@@ -104,13 +110,12 @@ class Profile(db.Model):
         self.cnt_marsh = cnt_marsh
         self.age_acc = age_acc
 
-
-def __repr__(self):
-    return f'Возраст {self.age}' \
-           f'Город {self.city}' \
-           f'Кол-во входов на сайт {self.cnt_ent}' \
-           f'Кол-во построенных маршрутов {self.cnt_marsh}' \
-           f'Кол-во дней на сайте {self.age_acc}'
+    def __repr__(self):
+        return f'Возраст {self.age}' \
+               f'Город {self.city}' \
+               f'Кол-во входов на сайт {self.cnt_ent}' \
+               f'Кол-во построенных маршрутов {self.cnt_marsh}' \
+               f'Кол-во дней на сайте {self.age_acc}'
 
 
 @app.route('/')
@@ -144,7 +149,6 @@ def login():
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
-    # zfasdadaw
     if 'login' in session and session['login'] == 1:
         return redirect('/about')
     if request.method == 'GET':
@@ -169,21 +173,50 @@ def about():
     return render_template('site_back.html')
 
 
-@app.route('/profile')
-def profile():
-    # Профиль almost done
-    global cnt_marshs, cnt_enters, age_acc
-    name = user_name
-    try:
-        name = user_name
-
-    except:
-        print(0)
-    return render_template('profile.html', name=name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs, age=age_acc)
-
-
 def prof_info():
     return user_name, cnt_enters, cnt_marshs, age_acc
+
+
+UPLOAD_FOLDER = 'C:\\Users\\alvin\\PycharmProjects\\WebRouter\\static\\avatars'
+# расширения файлов, которые разрешено загружать
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    """ Функция проверки расширения файла """
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def upload_file():
+    global cnt_marshs, cnt_enters, age_acc
+    if request.method == 'GET':
+        try:
+            cnt_enters = 1
+            cnt_marshs = 1
+            age_acc = 1
+
+        except:
+            print(0)
+        return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
+                               age=age_acc)
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('Не могу прочитать файл')
+            return redirect(request.url)
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], f'{user_name}.jpg'))  # id + .jpg
+            render_template('site_back.html', avatar_name=filename)
+            return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
+                                   age=age_acc, avatar_name=filename)
+
+        return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
+                               age=age_acc)
 
 
 if __name__ == '__main__':
