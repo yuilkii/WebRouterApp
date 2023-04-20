@@ -128,8 +128,14 @@ def index():
 @app.route('/news')
 def newin():
     # нужен шаблон с новостями, из профиля переход к послежним новостям и парсинг с сайта
+    URL = 'https://www.mos.ru/news/'
     # news = db.query(User).filter(User.content!="").first
-    # r = requests.get("https://www.mos.ru/news/")
+    r = requests.get(URL)
+    # print(r.status_code)
+    # print(r.text)
+    soup = BS(r.text, "html.parser")
+    new = soup.find_all('span', class_='commonCard__title')
+    print(new)
     # html = BS(r.content, 'html.parser')
     #
     # for i in html.select(".news-main-mayor > .news-col-x1-3 > .news-col-md-12"):
@@ -149,6 +155,7 @@ def login():
         name = request.form.get('login')
         password = request.form.get('password')
         user = User.query.filter_by(name=name).first()
+        print(user)
         if not user or not check_password_hash(user.hashed_password, password):
             flash('Something went wrong'
                   'Please check your login or password')
@@ -183,11 +190,14 @@ def signup():
 
 @app.route('/about')
 def about():
+    # return User.query.order_by(User.name).all(), User.query.order_by(User.hashed_password), \
+    #     User.query.order_by(User.created_date)
     return render_template('site_back.html')
 
 
 def prof_info():
-    return user_name, cnt_enters, cnt_marshs, age_acc
+    return User.query.order_by(User.name).all(), User.query.order_by(User.hashed_password), \
+        User.query.order_by(User.created_date)
 
 
 UPLOAD_FOLDER = 'C:\\Users\\alvin\\PycharmProjects\\WebRouter\\static\\avatars'
