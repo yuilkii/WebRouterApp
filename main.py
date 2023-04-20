@@ -8,6 +8,8 @@ from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
+import requests
+from bs4 import BeautifulSoup as BS
 from flask import session
 import sqlite3
 from werkzeug.utils import secure_filename
@@ -45,22 +47,19 @@ class User(db.Model):
                    autoincrement=True)
     name = db.Column(db.String
                      , nullable=True)
-    email = db.Column(db.String,
-                      index=True, unique=True, nullable=True)
     hashed_password = db.Column(db.String, nullable=True)
 
     created_date = db.Column(db.DateTime,
                              default=datetime.datetime.now)
-    profiles = orm.relationship("Profiles", back_populates='user')
 
-    def __init__(self, name: str, email: str, hashed_password: str):
+    # profiles = orm.relationship("Profiles", back_populates='user')
+
+    def __init__(self, name: str, hashed_password: str):
         self.name = name
-        self.email = email
         self.hashed_password = hashed_password
 
     def __repr__(self):
         return f'Пользователь {self.name}.' \
-               f'Почта {self.email}' \
                f'Пароль {self.hashed_password}' \
                f'Дата создания {self.created_date}'
 
@@ -101,7 +100,8 @@ class Profile(db.Model):
                         autoincrement=True)
     user_id = db.Column(db.Integer,
                         db.ForeignKey("users.id"))
-    user = orm.relationship('User')
+
+    # user = orm.relationship('User')
 
     def __init__(self, age: int, city: str, cnt_ent: int, cnt_marsh: int, age_acc: int):
         self.age = age
@@ -125,6 +125,19 @@ def index():
     return "index"
 
 
+@app.route('/news')
+def newin():
+    # нужен шаблон с новостями, из профиля переход к послежним новостям и парсинг с сайта
+    # news = db.query(User).filter(User.content!="").first
+    # r = requests.get("https://www.mos.ru/news/")
+    # html = BS(r.content, 'html.parser')
+    #
+    # for i in html.select(".news-main-mayor > .news-col-x1-3 > .news-col-md-12"):
+    #     title = i.select(".commonCard__text > .commonCard__content")
+    #     print(title[0].text)
+    # return render_template('index.html')
+
+
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     global user_name
@@ -136,7 +149,7 @@ def login():
         name = request.form.get('login')
         password = request.form.get('password')
         user = User.query.filter_by(name=name).first()
-        if not user or not check_password_hash(user.password, password):
+        if not user or not check_password_hash(user.hashed_password, password):
             flash('Something went wrong'
                   'Please check your login or password')
             print(1)
