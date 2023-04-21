@@ -3,6 +3,7 @@ from flask import render_template, Flask
 from flask import url_for
 from flask import redirect
 from flask import request
+import random
 from flask import flash
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
@@ -125,23 +126,23 @@ def index():
     return "index"
 
 
+# URL = 'https://www.mos.ru/news/'
+
+
 @app.route('/news')
-def newin():
-    # нужен шаблон с новостями, из профиля переход к послежним новостям и парсинг с сайта
+def parser():
     URL = 'https://www.mos.ru/news/'
-    # news = db.query(User).filter(User.content!="").first
     r = requests.get(URL)
-    # print(r.status_code)
-    # print(r.text)
     soup = BS(r.text, "html.parser")
     new = soup.find_all('span', class_='commonCard__title')
-    print(new)
-    # html = BS(r.content, 'html.parser')
-    #
-    # for i in html.select(".news-main-mayor > .news-col-x1-3 > .news-col-md-12"):
-    #     title = i.select(".commonCard__text > .commonCard__content")
-    #     print(title[0].text)
-    # return render_template('index.html')
+    clear_news = [c.text for c in new]
+    # cl_news = ''.join(clear_news)
+    for i in clear_news:
+        news_news = News(title='Новости в Москве', content=i, is_private=False)
+        db.session.add(news_news)
+        db.session.commit()
+
+    return render_template('site_back.html')
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -190,14 +191,11 @@ def signup():
 
 @app.route('/about')
 def about():
-    # return User.query.order_by(User.name).all(), User.query.order_by(User.hashed_password), \
-    #     User.query.order_by(User.created_date)
-    return render_template('site_back.html')
-
-
-def prof_info():
-    return User.query.order_by(User.name).all(), User.query.order_by(User.hashed_password), \
-        User.query.order_by(User.created_date)
+    global cnt_enters
+    cnt_enters += 1
+    if session['login'] == 1:
+        return render_template('site_back.html', avatar_name=user_name, login='profile')
+    return render_template('site_back.html', avatar_name=user_name, login='signup')
 
 
 UPLOAD_FOLDER = 'C:\\Users\\alvin\\PycharmProjects\\WebRouter\\static\\avatars'
@@ -216,13 +214,7 @@ def allowed_file(filename):
 def upload_file():
     global cnt_marshs, cnt_enters, age_acc
     if request.method == 'GET':
-        try:
-            cnt_enters = 1
-            cnt_marshs = 1
-            age_acc = 1
-
-        except:
-            print(0)
+        print(0)
         return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
                                age=age_acc)
     if request.method == 'POST':
@@ -240,6 +232,12 @@ def upload_file():
 
         return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
                                age=age_acc)
+
+
+def prof_info(a):
+    if a == 1:
+        return User.query.order_by(User.name), User.query.order_by(User.hashed_password), \
+            User.query.order_by(User.created_date)
 
 
 if __name__ == '__main__':
