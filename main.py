@@ -138,9 +138,11 @@ def parser():
     clear_news = [c.text for c in new]
     # cl_news = ''.join(clear_news)
     for i in clear_news:
-        news_news = News(title='Новости в Москве', content=i, is_private=False)
-        db.session.add(news_news)
-        db.session.commit()
+        if len(i) >= 40:
+            print(i)
+            news_news = News(title='Новости в Москве', content=i, is_private=False)
+            db.session.add(news_news)
+            db.session.commit()
 
     return render_template('site_back.html')
 
