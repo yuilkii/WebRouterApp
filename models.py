@@ -1,3 +1,5 @@
+from sqlalchemy.util.preloaded import orm
+
 from main import db
 import datetime
 
@@ -14,7 +16,7 @@ class User(db.Model):
     created_date = db.Column(db.DateTime,
                              default=datetime.datetime.now)
 
-    # profiles = orm.relationship("Profiles", back_populates='user')
+    profiles = orm.relationship("Profiles", back_populates='user')
 
     def __init__(self, name: str, hashed_password: str):
         self.name = name
@@ -63,7 +65,7 @@ class Profile(db.Model):
     user_id = db.Column(db.Integer,
                         db.ForeignKey("users.id"))
 
-    # user = orm.relationship('User')
+    user = orm.relationship('User')
 
     def __init__(self, age: int, city: str, cnt_ent: int, cnt_marsh: int, age_acc: int):
         self.age = age

@@ -1,18 +1,15 @@
 import datetime
+
 from flask import render_template, Flask
-from flask import url_for
 from flask import redirect
 from flask import request
-import random
 from flask import flash
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy
-import requests
-from bs4 import BeautifulSoup as BS
-from flask import session
 import sqlite3
+from flask import session
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField, TextAreaField, SubmitField, EmailField
@@ -27,21 +24,12 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 user_name = 'root'
-cnt_enters = '???'
-cnt_marshs = '???'
-age_acc = '???'
-
-conn = sqlite3.connect('server1.db', check_same_thread=False)
-sql = conn.cursor()
-conn.commit()
-
-sql.execute("""CREATE TABLE IF NOT EXISTS routes (
-   cnt_enters INT,
-   cnt_marshs INT
-)""")
+cnt_enters = 1
+cnt_marshs = 1
+age_acc = 1
 
 
-class User(db.Model):
+class User(db.Model):  # таблица пользователей
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True,
@@ -53,7 +41,7 @@ class User(db.Model):
     created_date = db.Column(db.DateTime,
                              default=datetime.datetime.now)
 
-    # profiles = orm.relationship("Profiles", back_populates='user')
+    profiles = orm.relationship("Profile")
 
     def __init__(self, name: str, hashed_password: str):
         self.name = name
@@ -65,7 +53,7 @@ class User(db.Model):
                f'Дата создания {self.created_date}'
 
 
-class News(db.Model):
+class News(db.Model):  # таблица новостей
     __tablename__ = 'news'
 
     id = db.Column(db.Integer,
@@ -86,7 +74,7 @@ class News(db.Model):
                f'Приватность {self.is_private}'
 
 
-class Profile(db.Model):
+class Profile(db.Model):  # таблица профилей
     __tablename__ = 'profiles'
 
     id = db.Column(db.Integer, primary_key=True,
@@ -102,7 +90,7 @@ class Profile(db.Model):
     user_id = db.Column(db.Integer,
                         db.ForeignKey("users.id"))
 
-    # user = orm.relationship('User')
+    user = orm.relationship('User')
 
     def __init__(self, age: int, city: str, cnt_ent: int, cnt_marsh: int, age_acc: int):
         self.age = age
@@ -126,29 +114,8 @@ def index():
     return "index"
 
 
-# URL = 'https://www.mos.ru/news/'
-
-
-@app.route('/news')
-def parser():
-    URL = 'https://www.mos.ru/news/'
-    r = requests.get(URL)
-    soup = BS(r.text, "html.parser")
-    new = soup.find_all('span', class_='commonCard__title')
-    clear_news = [c.text for c in new]
-    # cl_news = ''.join(clear_news)
-    for i in clear_news:
-        if len(i) >= 40:
-            print(i)
-            news_news = News(title='Новости в Москве', content=i, is_private=False)
-            db.session.add(news_news)
-            db.session.commit()
-
-    return render_template('site_back.html')
-
-
 @app.route('/login', methods=['POST', 'GET'])
-def login():
+def login():  # авторизация пользователя
     global user_name
     if 'login' in session and session['login'] == 1:
         return redirect('/about')
@@ -158,20 +125,19 @@ def login():
         name = request.form.get('login')
         password = request.form.get('password')
         user = User.query.filter_by(name=name).first()
-        print(user)
         if not user or not check_password_hash(user.hashed_password, password):
             flash('Something went wrong'
                   'Please check your login or password')
-            print(1)
             return render_template('login.html')
         else:
-            print(2)
-            # user_name = name
-            return render_template('site_back.html')
+            user_name = name
+            session['login'] = 1
+            print(session['login'])
+            return redirect('/about')
 
 
 @app.route('/signup', methods=['POST', 'GET'])
-def signup():
+def signup():  # регистрация пользователя
     if 'login' in session and session['login'] == 1:
         return redirect('/about')
     if request.method == 'GET':
@@ -183,30 +149,30 @@ def signup():
             name=name).first()
         if user:
             flash('You already have a account')
-            print(34)
             return redirect('/login')
         new_user = User(name=name, hashed_password=generate_password_hash(password, method='sha256'))
         db.session.add(new_user)
         db.session.commit()
-        return render_template('site_back.html')
+        return render_template('login.html')
 
 
-@app.route('/about')
+@app.route('/about')  # главная страница
 def about():
     global cnt_enters
     cnt_enters += 1
+    print(session['login'])
     if session['login'] == 1:
         return render_template('site_back.html', avatar_name=user_name, login='profile')
     return render_template('site_back.html', avatar_name=user_name, login='signup')
 
 
-UPLOAD_FOLDER = 'C:\\Users\\alvin\\PycharmProjects\\WebRouter\\static\\avatars'
+UPLOAD_FOLDER = 'C:\\Users\\dimae\\PycharmProjects\\WebRouterApp\\static\\avatars'
 # расширения файлов, которые разрешено загружать
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-def allowed_file(filename):
+def allowed_file(filename):  # загрузка файлов
     """ Функция проверки расширения файла """
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -216,7 +182,6 @@ def allowed_file(filename):
 def upload_file():
     global cnt_marshs, cnt_enters, age_acc
     if request.method == 'GET':
-        print(0)
         return render_template('profile.html', name=user_name, cnt_enters=cnt_enters, cnt_marshs=cnt_marshs,
                                age=age_acc)
     if request.method == 'POST':

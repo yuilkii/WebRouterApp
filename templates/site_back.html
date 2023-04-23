@@ -22,7 +22,6 @@
    }
 
 
-
     </script>
     <style>
             .avatar {
@@ -34,7 +33,6 @@
 
 
             }
-
 
 
     </style>
@@ -60,7 +58,7 @@
     <label for="nav-toggle" class="nav-toggle" onclick=""></label>
     <div class="container">
 
-        <a href="/login" class="button">
+        <a href="/{{login}}" class="button">
             <div class="button__line"></div>
             <div class="button__line"></div>
             <span class="button__text">Profile</span>
@@ -70,8 +68,8 @@
 
 
     </div>
-    <div id="prof">{{user}}</div>
-    <img src="static\avatars\{{avatar_name}}" class="avatar">
+    <div id="prof">{{avatar_name}}</div>
+    <img src="static\avatars\{{avatar_name}}.jpg" class="avatar">
 </nav>
 <div class="weather">
     <div>
@@ -126,7 +124,6 @@
         document.write(day[d.getDay()]+" " +d.getDate()+ " " + month[d.getMonth()]);
 
     //-->
-
 
     </script>
 </div>
