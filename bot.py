@@ -90,12 +90,12 @@ def parser():  # парсер новостей с мосру
     return a
 
 
-@bot.message_handler(func=lambda message: 'Новости')
+@bot.message_handler(func=lambda message: message.text == 'Новости')
 def news(message):
     bot.send_message(message.chat.id, parser())
 
 
-@bot.message_handler(func=lambda message: 'Информация о павильонах')
+@bot.message_handler(func=lambda message: message.text == 'Информация о павильонах')
 def info(message):
     if message.text == 'Информация о павильонах':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)

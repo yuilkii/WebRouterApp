@@ -167,6 +167,7 @@ def about():
 
 
 UPLOAD_FOLDER = 'C:\\Users\\dimae\\PycharmProjects\\WebRouterApp\\static\\avatars'
+# путь к аватаркам, изменяем при надобности
 # расширения файлов, которые разрешено загружать
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
