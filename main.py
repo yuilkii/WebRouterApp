@@ -23,7 +23,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///server.db'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-user_name = 'root'
+user_name = 'Your Profile'
 cnt_enters = 1
 cnt_marshs = 1
 age_acc = 1
